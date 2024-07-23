@@ -1,0 +1,100 @@
+CREATE TABLE student(
+snum INT primary key,
+sname VARCHAR(10),
+major VARCHAR(10),
+lvl VARCHAR(10),
+age int
+);
+CREATE TABLE faculty(
+fid INT primary key,
+fname VARCHAR(20),
+deptid INT
+);
+CREATE TABLE class(
+cname VARCHAR(20) primary key,
+meets_at VARCHAR(10),
+room VARCHAR(10),
+fid INT references faculty(fid) on delete cascade
+);
+CREATE TABLE enrolled(
+snum INT references student(snum) on delete cascade,
+cname VARCHAR(20) references class(cname) on delete cascade,
+PRIMARY KEY(snum,cname)
+);
+INSERT INTO student VALUES(1,'John','History','Sr',19);
+INSERT INTO student VALUES(2,'Sakhi','History','Jr',20);
+INSERT INTO student VALUES(3,'Jhanavi','Maths','Sr',20);
+INSERT INTO student VALUES(4,'Tarun','History','Jr',20);
+INSERT INTO student VALUES(5,'Sid','History','Jr',20);
+INSERT INTO student VALUES(6,'Harsha','History','Sr',21);
+INSERT INTO faculty VALUES(11,'Rakesh',1000);
+INSERT INTO faculty VALUES(12,'Mohan',1000);
+INSERT INTO faculty VALUES(13,'Kumar',1001);
+INSERT INTO faculty VALUES(14,'Ravi',1002);
+INSERT INTO faculty VALUES(15,'Shan',1000);
+INSERT INTO class VALUES('class1','02:00:00','r128',14);
+INSERT INTO class VALUES('class8','10:00:00','r128',14);
+INSERT INTO class VALUES('class2','10:00:00','r2',12);
+INSERT INTO class VALUES('class3','10:00:00','r3',11);
+INSERT INTO class VALUES('class4','04:00:00','r128',14);
+INSERT INTO class VALUES('class5','08:00:00','r3',15);
+INSERT INTO class VALUES('class6','10:00:00','r128',14);
+INSERT INTO class VALUES('class7','10:00:00','r128',14);
+INSERT INTO enrolled VALUES(1,'class1');
+INSERT INTO enrolled VALUES(2,'class1');
+INSERT INTO enrolled VALUES(3,'class3');
+INSERT INTO enrolled VALUES(4,'class3');
+INSERT INTO enrolled VALUES(5,'class4');
+INSERT INTO enrolled VALUES(1,'class5');
+INSERT INTO enrolled VALUES(2,'class5');
+INSERT INTO enrolled VALUES(3,'class5');
+INSERT INTO enrolled VALUES(4,'class5');
+INSERT INTO enrolled VALUES(5,'class5');
+INSERT INTO enrolled VALUES(6,'class5');
+INSERT INTO enrolled VALUES(5,'class2');
+INSERT INTO enrolled VALUES(2,'class6');
+INSERT INTO enrolled VALUES(3,'class6');
+INSERT INTO enrolled VALUES(4,'class7');
+INSERT INTO enrolled VALUES(5,'class3');
+Queries
+/* Q1 Using Single Block query*/ 
+select s.sname 
+from student s, class c, enrolled e, faculty f
+where f.fname='Rakesh' and f.fid=c.fid and c.cname=e.cname and e.snum=s.snum and 
+s.lvl='Jr';
+/* Q1 Using Nested query*/ 
+select sname from student 
+where lvl='Jr' and snum in ( select snum from enrolled 
+ where cname in( select cname from class 
+ where fid in ( select fid from faculty 
+ where fname='Rakesh')));
+/* Q2 Using Single Block query*/ 
+select max(age) 
+from student s, class c, enrolled e, faculty f
+where f.fid=c.fid and c.cname=e.cname and e.snum=s.snum and (major='History' OR 
+f.fname='Ravi');
+/* Q2 Using Nested query*/ 
+select max(s.age )
+from student s
+where major='History' OR snum in (select snum from enrolled 
+ where cname in(select cname from class 
+ where fid in (select fid from faculty 
+ where fname=’ravi’)));
+/* Q3 */
+select Distinct S.Sname from Student S where S.Snum in
+(Select E1.Snum 
+from Enrolled E1,Enrolled E2,Class C1,Class C2 
+where E1.Cname=C1.Cname and E2.Cname=C2.Cname and E1.Snum=E2.Snum and
+E1.Cname<>E2.Cname and C1.Meets_at=C2.Meets_at);
+/* Nested Q4 */
+Select Distinct F.Fname , count(*) as CourseCount 
+from CLass C , Faculty F 
+where C.Fid = F.Fid and C.FID not in (Select Fid 
+from Class
+where Room IN (Select Room 
+from Class where Room != 'r128'))
+group by F.Fname;
+/* Q5 */
+select lvl, avg(age)
+from student
+group by lvl;
